@@ -4,6 +4,23 @@ exports.CreateInitialTables1704067200000 = void 0;
 const typeorm_1 = require("typeorm");
 class CreateInitialTables1704067200000 {
     async up(queryRunner) {
+        const tableNames = [
+            'order_items',
+            'orders',
+            'variant_attributes',
+            'variants',
+            'attribute_values',
+            'attributes',
+            'products',
+            'users',
+            'roles',
+        ];
+        for (const tableName of tableNames) {
+            const table = await queryRunner.getTable(tableName);
+            if (table) {
+                await queryRunner.dropTable(tableName);
+            }
+        }
         await queryRunner.createTable(new typeorm_1.Table({
             name: 'roles',
             columns: [
@@ -32,6 +49,12 @@ class CreateInitialTables1704067200000 {
                     isPrimary: true,
                     isGenerated: true,
                     generationStrategy: 'increment',
+                },
+                {
+                    name: 'name',
+                    type: 'varchar',
+                    length: '255',
+                    isNullable: true,
                 },
                 {
                     name: 'email',

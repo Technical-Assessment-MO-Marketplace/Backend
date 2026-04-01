@@ -8,10 +8,11 @@ class SeedInitialData1704153600000 {
       (1, 'admin'),
       (2, 'user')
     `);
-        await queryRunner.query(`
-      INSERT INTO users (email, password, role_id, created_at) VALUES
-      ('admin@mail.com', '$2b$10$vavNqN9T.VhUYhN4eXpYge77TBkXUvv5/wNQxkMnqEbEJ1lJEFIZi', 1, CURRENT_TIMESTAMP)
-    `);
+        const adminInsertQuery = `
+      INSERT INTO users (name, email, password, role_id, created_at) VALUES
+      ('Admin User', 'admin@mail.com', '$2b$10$Z8PJOUo.eZkBSI3uufb0tOXsg/2WO48LyUowAOW85K8aOr5cP1tOu', 1, CURRENT_TIMESTAMP)
+    `;
+        await queryRunner.query(adminInsertQuery);
         await queryRunner.query(`
       INSERT INTO attributes (id, name) VALUES
       (1, 'Color'),
