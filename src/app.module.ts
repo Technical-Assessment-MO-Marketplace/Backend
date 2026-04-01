@@ -8,6 +8,7 @@ import { DatabaseService } from './Database/database.service';
 import { CommonModule } from './common/common.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ProductsModule } from './modules/products/products.module';
+import { AttributesModule } from './modules/attributes/attributes.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ProductsModule } from './modules/products/products.module';
     CommonModule,
     AuthModule,
     ProductsModule,
+    AttributesModule,
   ],
   controllers: [AppController],
   providers: [AppService, DatabaseService],

@@ -17,6 +17,7 @@ const database_service_1 = require("./Database/database.service");
 const common_module_1 = require("./common/common.module");
 const auth_module_1 = require("./modules/auth/auth.module");
 const products_module_1 = require("./modules/products/products.module");
+const attributes_module_1 = require("./modules/attributes/attributes.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -31,6 +32,7 @@ exports.AppModule = AppModule = __decorate([
             common_module_1.CommonModule,
             auth_module_1.AuthModule,
             products_module_1.ProductsModule,
+            attributes_module_1.AttributesModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService, database_service_1.DatabaseService],
