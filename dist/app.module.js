@@ -16,6 +16,7 @@ const app_service_1 = require("./app.service");
 const database_service_1 = require("./Database/database.service");
 const common_module_1 = require("./common/common.module");
 const auth_module_1 = require("./modules/auth/auth.module");
+const products_module_1 = require("./modules/products/products.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -29,6 +30,7 @@ exports.AppModule = AppModule = __decorate([
             typeorm_1.TypeOrmModule.forRoot((0, config_2.getDatabaseConfig)()),
             common_module_1.CommonModule,
             auth_module_1.AuthModule,
+            products_module_1.ProductsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService, database_service_1.DatabaseService],

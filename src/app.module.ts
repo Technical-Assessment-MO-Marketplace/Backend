@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { DatabaseService } from './Database/database.service';
 import { CommonModule } from './common/common.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { ProductsModule } from './modules/products/products.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { AuthModule } from './modules/auth/auth.module';
     TypeOrmModule.forRoot(getDatabaseConfig()),
     CommonModule,
     AuthModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService, DatabaseService],
