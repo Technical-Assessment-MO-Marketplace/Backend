@@ -1,0 +1,6 @@
+// Migrations will be stored here
+// Example migration structure:
+// export class CreateUsersTable1234567890000 implements MigrationInterface {
+//   async up(queryRunner: QueryRunner): Promise<void> { }
+//   async down(queryRunner: QueryRunner): Promise<void> { }
+// }
