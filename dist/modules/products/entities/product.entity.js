@@ -18,6 +18,7 @@ let Product = class Product {
     created_by;
     created_at;
     user;
+    variants;
 };
 exports.Product = Product;
 __decorate([
@@ -47,6 +48,13 @@ __decorate([
     (0, typeorm_1.JoinColumn)({ name: 'created_by' }),
     __metadata("design:type", Object)
 ], Product.prototype, "user", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)('Variant', 'product', {
+        cascade: true,
+        eager: false,
+    }),
+    __metadata("design:type", Array)
+], Product.prototype, "variants", void 0);
 exports.Product = Product = __decorate([
     (0, typeorm_1.Entity)('products')
 ], Product);

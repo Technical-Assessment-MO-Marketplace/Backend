@@ -8,24 +8,24 @@ export declare class AuthController {
     register(registerDto: RegisterDto): Promise<{
         access_token: string;
         user: {
-            id: number;
-            name: string;
-            email: string;
+            id: number | undefined;
+            name: string | undefined;
+            email: string | undefined;
             role: string;
         };
     }>;
     login(loginDto: LoginDto): Promise<{
         access_token: string;
         user: {
-            id: number;
-            name: string;
-            email: string;
+            id: number | undefined;
+            name: string | undefined;
+            email: string | undefined;
             role: string;
         };
     }>;
     createAdmin(createAdminDto: CreateAdminDto, req: any): Promise<{
-        id: number;
-        email: string;
+        id: number | undefined;
+        email: string | undefined;
         role: string;
         message: string;
     }>;

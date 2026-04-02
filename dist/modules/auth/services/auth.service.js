@@ -52,6 +52,9 @@ let AuthService = AuthService_1 = class AuthService {
                 this.logger.warn(`Login failed: User not found for email ${email}`);
                 throw new common_1.UnauthorizedException('Invalid credentials');
             }
+            if (!user.password) {
+                throw new common_1.UnauthorizedException('Invalid credentials');
+            }
             await this.passwordService.verifyPassword(password, user.password);
             const token = await this.tokenService.generateToken(user);
             this.logger.log(`User logged in successfully: ${email}`);

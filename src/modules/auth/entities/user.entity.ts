@@ -11,24 +11,24 @@ import { Role } from './role.entity';
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
-  id: number;
+  id?: number;
 
   @Column({ type: 'varchar', length: 255 })
-  name: string;
+  name?: string;
 
   @Column({ type: 'varchar', length: 255, unique: true })
-  email: string;
+  email?: string;
 
   @Column({ type: 'varchar', length: 255 })
-  password: string;
+  password?: string;
 
   @Column({ type: 'int', nullable: true })
-  role_id: number;
+  role_id?: number;
 
   @ManyToOne(() => Role)
   @JoinColumn({ name: 'role_id' })
-  role: Role;
+  role?: Role;
 
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  created_at: Date;
+  created_at?: Date;
 }

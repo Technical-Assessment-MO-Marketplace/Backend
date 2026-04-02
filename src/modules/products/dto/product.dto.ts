@@ -16,20 +16,6 @@ export class CreateProductDto {
   description?: string;
 }
 
-export class VariantDataDto {
-  @IsNumber()
-  @IsNotEmpty()
-  price: number;
-
-  @IsNumber()
-  @IsNotEmpty()
-  stock: number;
-
-  @IsArray()
-  @IsNotEmpty()
-  attributeValueIds: number[];
-}
-
 export class CreateVariantDto {
   @IsNumber()
   @IsNotEmpty()

@@ -5,15 +5,15 @@ export declare class ResponseHandlerService {
     formatUserResponse(token: string, user: User, role: string): {
         access_token: string;
         user: {
-            id: number;
-            name: string;
-            email: string;
+            id: number | undefined;
+            name: string | undefined;
+            email: string | undefined;
             role: string;
         };
     };
     formatAdminCreationResponse(newAdmin: User): {
-        id: number;
-        email: string;
+        id: number | undefined;
+        email: string | undefined;
         role: string;
         message: string;
     };

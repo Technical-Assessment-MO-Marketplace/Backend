@@ -76,6 +76,9 @@ export class AuthService {
       }
 
       // Verify password matches
+      if (!user.password) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
       await this.passwordService.verifyPassword(password, user.password);
 
       // Generate JWT token

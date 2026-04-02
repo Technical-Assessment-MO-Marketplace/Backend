@@ -3,11 +3,11 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 @Entity('attributes')
 export class Attribute {
   @PrimaryGeneratedColumn()
-  id: number;
+  id?: number;
 
   @Column({ type: 'varchar', length: 255, unique: true })
-  name: string;
+  name?: string;
 
   @OneToMany('AttributeValue', 'attribute', { cascade: true })
-  attributeValues: any[];
+  attributeValues?: any[];
 }

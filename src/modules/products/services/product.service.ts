@@ -47,21 +47,23 @@ export class ProductService {
       const saved = await this.productRepository.save(product);
       this.logger.log(`Product created successfully with id ${saved.id}`);
       return saved;
-    } catch (error) {
-      this.logger.error(`Failed to create product: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to create product: ${errorMessage}`);
       throw error;
     }
   }
 
   async findAll(): Promise<Product[]> {
     try {
-      this.logger.log('Fetching all products with variants');
-      const products = await this.productRepository.find({
-        relations: ['variants', 'variants.variantAttributes'],
-      });
+      this.logger.log('Fetching all products');
+      const products = await this.productRepository.find();
       return products;
-    } catch (error) {
-      this.logger.error(`Failed to fetch products: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to fetch products: ${errorMessage}`);
       throw new BadRequestException('Failed to fetch products');
     }
   }
@@ -71,7 +73,6 @@ export class ProductService {
       this.logger.log(`Fetching product ${id}`);
       const product = await this.productRepository.findOne({
         where: { id },
-        relations: ['variants', 'variants.variantAttributes'],
       });
 
       if (!product) {
@@ -79,8 +80,10 @@ export class ProductService {
       }
 
       return product;
-    } catch (error) {
-      this.logger.error(`Failed to fetch product: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to fetch product: ${errorMessage}`);
       throw error;
     }
   }
@@ -110,8 +113,10 @@ export class ProductService {
       const updated = await this.productRepository.save(product);
       this.logger.log(`Product ${id} updated successfully`);
       return updated;
-    } catch (error) {
-      this.logger.error(`Failed to update product: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to update product: ${errorMessage}`);
       throw error;
     }
   }
@@ -123,8 +128,10 @@ export class ProductService {
       const product = await this.findOne(id);
       await this.productRepository.remove(product);
       this.logger.log(`Product ${id} deleted successfully`);
-    } catch (error) {
-      this.logger.error(`Failed to delete product: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to delete product: ${errorMessage}`);
       throw error;
     }
   }

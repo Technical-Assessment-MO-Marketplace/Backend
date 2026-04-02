@@ -7,16 +7,16 @@ export declare class ProductsController {
     private readonly logger;
     constructor(productService: ProductService, variantService: VariantService);
     createProduct(createProductDto: CreateProductDto, req: any): Promise<{
-        id: number;
-        name: string;
-        description: string;
-        created_by: number;
+        id: number | undefined;
+        name: string | undefined;
+        description: string | undefined;
+        created_by: number | undefined;
         message: string;
     }>;
     updateProduct(id: number, updateData: Partial<CreateProductDto>): Promise<{
-        id: number;
-        name: string;
-        description: string;
+        id: number | undefined;
+        name: string | undefined;
+        description: string | undefined;
         message: string;
     }>;
     deleteProduct(id: number): Promise<{

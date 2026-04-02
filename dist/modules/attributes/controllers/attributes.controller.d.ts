@@ -9,8 +9,8 @@ export declare class AttributesController {
     private readonly logger;
     constructor(attributeService: AttributeService, attributeValueService: AttributeValueService, variantAttributeService: VariantAttributeService);
     createAttribute(createAttributeDto: CreateAttributeDto): Promise<{
-        id: number;
-        name: string;
+        id: number | undefined;
+        name: string | undefined;
         message: string;
     }>;
     getAllAttributes(): Promise<{
@@ -18,9 +18,9 @@ export declare class AttributesController {
         total: number;
     }>;
     createAttributeValue(createAttributeValueDto: CreateAttributeValueDto): Promise<{
-        id: number;
-        attribute_id: number;
-        value: string;
+        id: number | undefined;
+        attribute_id: number | undefined;
+        value: string | undefined;
         message: string;
     }>;
     getAllAttributeValues(): Promise<{
@@ -32,9 +32,9 @@ export declare class AttributesController {
         total: number;
     }>;
     createVariantAttribute(createVariantAttributeDto: CreateVariantAttributeDto): Promise<{
-        id: number;
-        variant_id: number;
-        attribute_value_id: number;
+        id: number | undefined;
+        variant_id: number | undefined;
+        attribute_value_id: number | undefined;
         message: string;
     }>;
     getAllVariantAttributes(): Promise<{

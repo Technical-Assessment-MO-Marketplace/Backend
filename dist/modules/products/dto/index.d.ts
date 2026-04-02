@@ -1,1 +1,1 @@
-export { CreateProductDto, CreateVariantDto, VariantDataDto, } from './product.dto';
+export { CreateProductDto, CreateVariantDto } from './product.dto';
