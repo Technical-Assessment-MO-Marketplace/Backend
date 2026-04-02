@@ -409,6 +409,11 @@ export class CreateInitialTables1704067200000 implements MigrationInterface {
             isNullable: false,
           },
           {
+            name: 'product_id',
+            type: 'int',
+            isNullable: false,
+          },
+          {
             name: 'variant_id',
             type: 'int',
             isNullable: false,
@@ -442,6 +447,16 @@ export class CreateInitialTables1704067200000 implements MigrationInterface {
     await queryRunner.createForeignKey(
       'order_items',
       new TableForeignKey({
+        columnNames: ['product_id'],
+        referencedColumnNames: ['id'],
+        referencedTableName: 'products',
+        onDelete: 'CASCADE',
+      }),
+    );
+
+    await queryRunner.createForeignKey(
+      'order_items',
+      new TableForeignKey({
         columnNames: ['variant_id'],
         referencedColumnNames: ['id'],
         referencedTableName: 'variants',
@@ -455,6 +470,14 @@ export class CreateInitialTables1704067200000 implements MigrationInterface {
       new TableIndex({
         columnNames: ['role_id'],
         name: 'IDX_users_role_id',
+      }),
+    );
+
+    await queryRunner.createIndex(
+      'users',
+      new TableIndex({
+        columnNames: ['email'],
+        name: 'IDX_users_email',
       }),
     );
 
@@ -519,6 +542,14 @@ export class CreateInitialTables1704067200000 implements MigrationInterface {
       new TableIndex({
         columnNames: ['order_id'],
         name: 'IDX_order_items_order_id',
+      }),
+    );
+
+    await queryRunner.createIndex(
+      'order_items',
+      new TableIndex({
+        columnNames: ['product_id'],
+        name: 'IDX_order_items_product_id',
       }),
     );
 
