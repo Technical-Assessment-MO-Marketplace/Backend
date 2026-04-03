@@ -46,4 +46,19 @@ export class ProductsPublicController {
       message: 'Product variants retrieved successfully',
     };
   }
+
+  @Get(':productId/attributes')
+  @HttpCode(HttpStatus.OK)
+  async getProductAttributes(@Param('productId') productId: number) {
+    this.logger.log(
+      `Fetching attributes for product ${productId} (public access)`,
+    );
+    const attributes = await this.variantService.getProductAttributes(productId);
+    return {
+      productId,
+      attributes,
+      total: attributes.length,
+      message: 'Product attributes retrieved successfully',
+    };
+  }
 }

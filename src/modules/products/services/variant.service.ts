@@ -10,6 +10,7 @@ import { Variant } from '../entities/variant.entity';
 import { Product } from '../entities/product.entity';
 import { VariantAttribute } from '../../variants/entities/variant-attribute.entity';
 import { AttributeValue } from '../../attributes/entities/attribute-value.entity';
+import { Attribute } from '../../attributes/entities/attribute.entity';
 
 @Injectable()
 export class VariantService {
@@ -24,6 +25,8 @@ export class VariantService {
     private variantAttributeRepository: Repository<VariantAttribute>,
     @InjectRepository(AttributeValue)
     private attributeValueRepository: Repository<AttributeValue>,
+    @InjectRepository(Attribute)
+    private attributeRepository: Repository<Attribute>,
   ) {}
 
   async createVariant(createVariantDto: any): Promise<any> {
@@ -125,6 +128,18 @@ export class VariantService {
       });
 
       const savedVariant = await this.variantRepository.save(variant);
+
+      // ============ CREATE VARIANT ATTRIBUTES ============
+
+      // Create VariantAttribute records to link variant with attribute values
+      for (const attributeValueId of createVariantDto.attributeValueIds) {
+        const variantAttribute = this.variantAttributeRepository.create({
+          variant_id: savedVariant.id,
+          attribute_value_id: attributeValueId,
+        });
+        await this.variantAttributeRepository.save(variantAttribute);
+      }
+
       this.logger.log(
         `Variant created successfully - ID: ${savedVariant.id}, Product: ${createVariantDto.product_id}, Combination: ${combinationKey}, Price: ${createVariantDto.price}, Stock: ${createVariantDto.stock}`,
       );
@@ -157,12 +172,18 @@ export class VariantService {
           });
 
           const attributeValues: string[] = [];
-          for (const variantAttr of variantAttributes) {
+          
+          // Sort variant attributes by attribute_value_id for consistency
+          const sortedAttributes = variantAttributes.sort(
+            (a, b) => (a.attribute_value_id || 0) - (b.attribute_value_id || 0),
+          );
+
+          for (const variantAttr of sortedAttributes) {
             const attrValue = await this.attributeValueRepository.findOne({
               where: { id: variantAttr.attribute_value_id },
             });
-            if (attrValue) {
-              attributeValues.push(attrValue.value || '');
+            if (attrValue && attrValue.value) {
+              attributeValues.push(attrValue.value);
             }
           }
 
@@ -232,6 +253,89 @@ export class VariantService {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.error(`Failed to delete variant: ${message}`);
       throw error;
+    }
+  }
+
+  async getProductAttributes(productId: number): Promise<any[]> {
+    try {
+      this.logger.log(`Fetching attributes for product ${productId}`);
+
+      // Verify product exists
+      const product = await this.productRepository.findOne({
+        where: { id: productId },
+      });
+
+      if (!product) {
+        throw new NotFoundException(`Product with id ${productId} not found`);
+      }
+
+      // Get all variants for this product
+      const variants = await this.variantRepository.find({
+        where: { product_id: productId },
+      });
+
+      if (variants.length === 0) {
+        return [];
+      }
+
+      // Get all variant attributes from all variants
+      const allVariantAttributes: { attribute_id?: number; [key: string]: any }[] = [];
+
+      for (const variant of variants) {
+        const variantAttributes = await this.variantAttributeRepository.find({
+          where: { variant_id: variant.id },
+        });
+        allVariantAttributes.push(...variantAttributes);
+      }
+
+      // Get unique attribute IDs
+      const uniqueAttributeIds = [...new Set(allVariantAttributes.map((va) => {
+        // We need to get the attribute_id from the attribute_value
+        return va.attribute_value_id;
+      }))];
+
+      // Get all unique attributes and their values for those attributes
+      const attributes: any[] = [];
+      const processedAttributeIds = new Set<number>();
+
+      for (const attributeValueId of uniqueAttributeIds) {
+        const attributeValue = await this.attributeValueRepository.findOne({
+          where: { id: attributeValueId },
+        });
+
+        if (attributeValue && attributeValue.attribute_id && !processedAttributeIds.has(attributeValue.attribute_id)) {
+          processedAttributeIds.add(attributeValue.attribute_id);
+
+          // Get all values for this attribute
+          const allValues = await this.attributeValueRepository.find({
+            where: { attribute_id: attributeValue.attribute_id },
+          });
+
+          // Get the attribute name
+          const attribute = await this.attributeRepository.findOne({
+            where: { id: attributeValue.attribute_id },
+          });
+
+          attributes.push({
+            attribute_id: attributeValue.attribute_id,
+            attribute_name: attribute?.name || '',
+            values: allValues.map((v) => ({
+              id: v.id,
+              value: v.value,
+            })),
+          });
+        }
+      }
+
+      this.logger.log(`Found ${attributes.length} attributes for product ${productId}`);
+      return attributes;
+    } catch (error: unknown) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to fetch product attributes: ${message}`);
+      throw new BadRequestException('Failed to fetch product attributes');
     }
   }
 }

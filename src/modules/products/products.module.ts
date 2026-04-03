@@ -5,6 +5,7 @@ import { ProductService, VariantService } from './services';
 import { Product, Variant } from './entities';
 import { VariantAttribute } from '../variants/entities/variant-attribute.entity';
 import { AttributeValue } from '../attributes/entities/attribute-value.entity';
+import { Attribute } from '../attributes/entities/attribute.entity';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { AttributeValue } from '../attributes/entities/attribute-value.entity';
       Variant,
       VariantAttribute,
       AttributeValue,
+      Attribute,
     ]),
   ],
   controllers: [ProductsController, ProductsPublicController],
