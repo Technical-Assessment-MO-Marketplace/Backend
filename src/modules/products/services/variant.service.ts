@@ -8,6 +8,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Variant } from '../entities/variant.entity';
 import { Product } from '../entities/product.entity';
+import { VariantAttribute } from '../../variants/entities/variant-attribute.entity';
+import { AttributeValue } from '../../attributes/entities/attribute-value.entity';
 
 @Injectable()
 export class VariantService {
@@ -18,6 +20,10 @@ export class VariantService {
     private variantRepository: Repository<Variant>,
     @InjectRepository(Product)
     private productRepository: Repository<Product>,
+    @InjectRepository(VariantAttribute)
+    private variantAttributeRepository: Repository<VariantAttribute>,
+    @InjectRepository(AttributeValue)
+    private attributeValueRepository: Repository<AttributeValue>,
   ) {}
 
   async createVariant(createVariantDto: any): Promise<any> {
@@ -124,8 +130,9 @@ export class VariantService {
       );
 
       return savedVariant;
-    } catch (error) {
-      this.logger.error(`Failed to create variant: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to create variant: ${message}`);
       throw error;
     }
   }
@@ -142,9 +149,38 @@ export class VariantService {
 
       const variants = await this.variantRepository.find(query);
 
-      return variants;
-    } catch (error) {
-      this.logger.error(`Failed to fetch variants: ${error.message}`);
+      // Transform variants to include attribute values instead of combination_key
+      const enrichedVariants = await Promise.all(
+        variants.map(async (variant) => {
+          const variantAttributes = await this.variantAttributeRepository.find({
+            where: { variant_id: variant.id },
+          });
+
+          const attributeValues: string[] = [];
+          for (const variantAttr of variantAttributes) {
+            const attrValue = await this.attributeValueRepository.findOne({
+              where: { id: variantAttr.attribute_value_id },
+            });
+            if (attrValue) {
+              attributeValues.push(attrValue.value || '');
+            }
+          }
+
+          return {
+            id: variant.id,
+            product_id: variant.product_id,
+            attributes: attributeValues.join(', '),
+            price: variant.price,
+            stock: variant.stock,
+            created_at: variant.created_at,
+          };
+        }),
+      );
+
+      return enrichedVariants;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to fetch variants: ${message}`);
       throw new BadRequestException('Failed to fetch variants');
     }
   }
@@ -161,8 +197,9 @@ export class VariantService {
       }
 
       return variant;
-    } catch (error) {
-      this.logger.error(`Failed to fetch variant: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to fetch variant: ${message}`);
       throw error;
     }
   }
@@ -177,8 +214,9 @@ export class VariantService {
       const updated = await this.variantRepository.save(variant);
       this.logger.log(`Variant ${id} stock updated successfully`);
       return updated;
-    } catch (error) {
-      this.logger.error(`Failed to update stock: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to update stock: ${message}`);
       throw error;
     }
   }
@@ -190,8 +228,9 @@ export class VariantService {
       const variant = await this.findOne(id);
       await this.variantRepository.remove(variant);
       this.logger.log(`Variant ${id} deleted successfully`);
-    } catch (error) {
-      this.logger.error(`Failed to delete variant: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to delete variant: ${message}`);
       throw error;
     }
   }
