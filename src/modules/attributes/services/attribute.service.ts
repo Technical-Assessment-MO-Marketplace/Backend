@@ -82,4 +82,29 @@ export class AttributeService {
       throw new InternalServerErrorException('Failed to fetch attribute');
     }
   }
+
+  async delete(id: number): Promise<{ message: string }> {
+    try {
+      const attribute = await this.attributeRepository.findOne({
+        where: { id },
+      });
+
+      if (!attribute) {
+        throw new NotFoundException(`Attribute with id ${id} not found`);
+      }
+
+      // Delete the attribute (cascade delete will remove all related attribute values)
+      await this.attributeRepository.remove(attribute);
+
+      this.logger.log(`Attribute deleted: id ${id}`);
+      return { message: 'Attribute deleted successfully' };
+    } catch (error: unknown) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to delete attribute: ${message}`);
+      throw new InternalServerErrorException('Failed to delete attribute');
+    }
+  }
 }

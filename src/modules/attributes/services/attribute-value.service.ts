@@ -106,4 +106,31 @@ export class AttributeValueService {
       );
     }
   }
+
+  async delete(id: number): Promise<{ message: string }> {
+    try {
+      const attributeValue = await this.attributeValueRepository.findOne({
+        where: { id },
+      });
+
+      if (!attributeValue) {
+        throw new NotFoundException(`Attribute value with id ${id} not found`);
+      }
+
+      // Delete the attribute value
+      await this.attributeValueRepository.remove(attributeValue);
+
+      this.logger.log(`Attribute value deleted: id ${id}`);
+      return { message: 'Attribute value deleted successfully' };
+    } catch (error: unknown) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to delete attribute value: ${message}`);
+      throw new InternalServerErrorException(
+        'Failed to delete attribute value',
+      );
+    }
+  }
 }

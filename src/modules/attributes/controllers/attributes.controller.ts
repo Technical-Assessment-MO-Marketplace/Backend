@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Delete,
   Body,
   Param,
   UseGuards,
@@ -55,6 +56,14 @@ export class AttributesController {
     };
   }
 
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async deleteAttribute(@Param('id') id: number) {
+    this.logger.log(`Deleting attribute: ${id}`);
+    const result = await this.attributeService.delete(id);
+    return result;
+  }
+
   // ATTRIBUTE VALUES ENDPOINTS
 
   @Post('values')
@@ -94,6 +103,14 @@ export class AttributesController {
       values,
       total: values.length,
     };
+  }
+
+  @Delete('values/:id')
+  @HttpCode(HttpStatus.OK)
+  async deleteAttributeValue(@Param('id') id: number) {
+    this.logger.log(`Deleting attribute value: ${id}`);
+    const result = await this.attributeValueService.delete(id);
+    return result;
   }
 
   // VARIANT ATTRIBUTES ENDPOINTS
