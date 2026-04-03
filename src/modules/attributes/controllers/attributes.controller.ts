@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Body,
+  Param,
   UseGuards,
   Logger,
   HttpCode,
@@ -86,7 +87,7 @@ export class AttributesController {
   }
 
   @Get('attribute/:id/values')
-  async getAttributeValues(@Body('id') id: number) {
+  async getAttributeValues(@Param('id') id: number) {
     this.logger.log(`Fetching values for attribute ${id}`);
     const values = await this.attributeValueService.findByAttribute(id);
     return {
