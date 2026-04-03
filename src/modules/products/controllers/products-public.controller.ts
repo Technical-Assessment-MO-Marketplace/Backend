@@ -53,7 +53,8 @@ export class ProductsPublicController {
     this.logger.log(
       `Fetching attributes for product ${productId} (public access)`,
     );
-    const attributes = await this.variantService.getProductAttributes(productId);
+    const attributes =
+      await this.variantService.getProductAttributes(productId);
     return {
       productId,
       attributes,

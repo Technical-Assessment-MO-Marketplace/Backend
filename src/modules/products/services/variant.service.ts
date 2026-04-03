@@ -172,7 +172,7 @@ export class VariantService {
           });
 
           const attributeValues: string[] = [];
-          
+
           // Sort variant attributes by attribute_value_id for consistency
           const sortedAttributes = variantAttributes.sort(
             (a, b) => (a.attribute_value_id || 0) - (b.attribute_value_id || 0),
@@ -279,7 +279,10 @@ export class VariantService {
       }
 
       // Get all variant attributes from all variants
-      const allVariantAttributes: { attribute_id?: number; [key: string]: any }[] = [];
+      const allVariantAttributes: {
+        attribute_id?: number;
+        [key: string]: any;
+      }[] = [];
 
       for (const variant of variants) {
         const variantAttributes = await this.variantAttributeRepository.find({
@@ -289,10 +292,14 @@ export class VariantService {
       }
 
       // Get unique attribute IDs
-      const uniqueAttributeIds = [...new Set(allVariantAttributes.map((va) => {
-        // We need to get the attribute_id from the attribute_value
-        return va.attribute_value_id;
-      }))];
+      const uniqueAttributeIds = [
+        ...new Set(
+          allVariantAttributes.map((va) => {
+            // We need to get the attribute_id from the attribute_value
+            return va.attribute_value_id;
+          }),
+        ),
+      ];
 
       // Get all unique attributes and their values for those attributes
       const attributes: any[] = [];
@@ -303,7 +310,11 @@ export class VariantService {
           where: { id: attributeValueId },
         });
 
-        if (attributeValue && attributeValue.attribute_id && !processedAttributeIds.has(attributeValue.attribute_id)) {
+        if (
+          attributeValue &&
+          attributeValue.attribute_id &&
+          !processedAttributeIds.has(attributeValue.attribute_id)
+        ) {
           processedAttributeIds.add(attributeValue.attribute_id);
 
           // Get all values for this attribute
@@ -327,7 +338,9 @@ export class VariantService {
         }
       }
 
-      this.logger.log(`Found ${attributes.length} attributes for product ${productId}`);
+      this.logger.log(
+        `Found ${attributes.length} attributes for product ${productId}`,
+      );
       return attributes;
     } catch (error: unknown) {
       if (error instanceof NotFoundException) {
