@@ -56,14 +56,6 @@ export class AttributesController {
     };
   }
 
-  @Delete(':id')
-  @HttpCode(HttpStatus.OK)
-  async deleteAttribute(@Param('id') id: number) {
-    this.logger.log(`Deleting attribute: ${id}`);
-    const result = await this.attributeService.delete(id);
-    return result;
-  }
-
   // ATTRIBUTE VALUES ENDPOINTS
 
   @Post('values')
@@ -95,6 +87,14 @@ export class AttributesController {
     };
   }
 
+  @Delete('values/:id')
+  @HttpCode(HttpStatus.OK)
+  async deleteAttributeValue(@Param('id') id: number) {
+    this.logger.log(`Deleting attribute value: ${id}`);
+    const result = await this.attributeValueService.delete(id);
+    return result;
+  }
+
   @Get('attribute/:id/values')
   async getAttributeValues(@Param('id') id: number) {
     this.logger.log(`Fetching values for attribute ${id}`);
@@ -105,11 +105,12 @@ export class AttributesController {
     };
   }
 
-  @Delete('values/:id')
+  // Delete specific attribute (must be after more specific routes)
+  @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  async deleteAttributeValue(@Param('id') id: number) {
-    this.logger.log(`Deleting attribute value: ${id}`);
-    const result = await this.attributeValueService.delete(id);
+  async deleteAttribute(@Param('id') id: number) {
+    this.logger.log(`Deleting attribute: ${id}`);
+    const result = await this.attributeService.delete(id);
     return result;
   }
 
@@ -145,7 +146,7 @@ export class AttributesController {
   }
 
   @Get('variant/:id/attributes')
-  async getVariantAttributes(@Body('id') id: number) {
+  async getVariantAttributes(@Param('id') id: number) {
     this.logger.log(`Fetching attributes for variant ${id}`);
     const attributes = await this.variantAttributeService.findByVariant(id);
     return {
