@@ -5,18 +5,19 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { User } from '../../modules/auth/entities/user.entity';
 
 @Injectable()
 export class UserHelperService {
-  private userRepository: Repository<User>;
   private readonly logger = new Logger(UserHelperService.name);
   private readonly ADMIN_ROLE_ID = 1;
 
-  constructor(private dataSource: DataSource) {
-    this.userRepository = this.dataSource.getRepository(User);
-  }
+  constructor(
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+  ) {}
 
   async validateEmailUniqueness(email: string): Promise<void> {
     try {
@@ -27,11 +28,12 @@ export class UserHelperService {
       if (existingUser) {
         throw new BadRequestException('User with this email already exists');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof BadRequestException) {
         throw error;
       }
-      this.logger.error(`Email uniqueness validation failed: ${error.message}`);
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Email uniqueness validation failed: ${message}`);
       throw new InternalServerErrorException('Failed to validate email');
     }
   }
@@ -51,11 +53,12 @@ export class UserHelperService {
       }
 
       return currentUser;
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof UnauthorizedException) {
         throw error;
       }
-      this.logger.error(`Admin verification failed: ${error.message}`);
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Admin verification failed: ${message}`);
       throw new InternalServerErrorException('Failed to verify admin status');
     }
   }
@@ -67,8 +70,9 @@ export class UserHelperService {
         relations: ['role'],
       });
       return user || null;
-    } catch (error) {
-      this.logger.error(`Failed to find user by email: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to find user by email: ${message}`);
       throw new InternalServerErrorException('Database error');
     }
   }
@@ -89,8 +93,9 @@ export class UserHelperService {
 
       const savedUser = await this.userRepository.save(user);
       return savedUser;
-    } catch (error) {
-      this.logger.error(`Failed to create user: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to create user: ${message}`);
       throw new InternalServerErrorException('Failed to create user');
     }
   }

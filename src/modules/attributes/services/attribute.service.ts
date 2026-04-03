@@ -5,18 +5,19 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Attribute } from '../entities/attribute.entity';
 import { CreateAttributeDto } from '../dto/create-attribute.dto';
 
 @Injectable()
 export class AttributeService {
-  private attributeRepository: Repository<Attribute>;
   private readonly logger = new Logger(AttributeService.name);
 
-  constructor(private dataSource: DataSource) {
-    this.attributeRepository = this.dataSource.getRepository(Attribute);
-  }
+  constructor(
+    @InjectRepository(Attribute)
+    private attributeRepository: Repository<Attribute>,
+  ) {}
 
   async create(createAttributeDto: CreateAttributeDto): Promise<Attribute> {
     try {
@@ -37,11 +38,12 @@ export class AttributeService {
 
       this.logger.log(`Attribute created: ${name}`);
       return savedAttribute;
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof BadRequestException) {
         throw error;
       }
-      this.logger.error(`Failed to create attribute: ${error.message}`);
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to create attribute: ${message}`);
       throw new InternalServerErrorException('Failed to create attribute');
     }
   }
@@ -52,8 +54,9 @@ export class AttributeService {
         relations: ['attributeValues'],
       });
       return attributes;
-    } catch (error) {
-      this.logger.error(`Failed to fetch attributes: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to fetch attributes: ${message}`);
       throw new InternalServerErrorException('Failed to fetch attributes');
     }
   }
@@ -70,11 +73,12 @@ export class AttributeService {
       }
 
       return attribute;
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      this.logger.error(`Failed to fetch attribute: ${error.message}`);
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to fetch attribute: ${message}`);
       throw new InternalServerErrorException('Failed to fetch attribute');
     }
   }

@@ -5,7 +5,8 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { VariantAttribute } from '../../variants/entities/variant-attribute.entity';
 import { CreateVariantAttributeDto } from '../dto/create-variant-attribute.dto';
 import { AttributeValue } from '../entities/attribute-value.entity';
@@ -13,18 +14,16 @@ import { Variant } from '../../variants/entities/variant.entity';
 
 @Injectable()
 export class VariantAttributeService {
-  private variantAttributeRepository: Repository<VariantAttribute>;
-  private attributeValueRepository: Repository<AttributeValue>;
-  private variantRepository: Repository<Variant>;
   private readonly logger = new Logger(VariantAttributeService.name);
 
-  constructor(private dataSource: DataSource) {
-    this.variantAttributeRepository =
-      this.dataSource.getRepository(VariantAttribute);
-    this.attributeValueRepository =
-      this.dataSource.getRepository(AttributeValue);
-    this.variantRepository = this.dataSource.getRepository(Variant);
-  }
+  constructor(
+    @InjectRepository(VariantAttribute)
+    private variantAttributeRepository: Repository<VariantAttribute>,
+    @InjectRepository(AttributeValue)
+    private attributeValueRepository: Repository<AttributeValue>,
+    @InjectRepository(Variant)
+    private variantRepository: Repository<Variant>,
+  ) {}
 
   async create(
     createVariantAttributeDto: CreateVariantAttributeDto,
@@ -73,14 +72,15 @@ export class VariantAttributeService {
         await this.variantAttributeRepository.save(variantAttribute);
       this.logger.log(`Variant attribute created for variant ${variant_id}`);
       return saved;
-    } catch (error) {
+    } catch (error: unknown) {
       if (
         error instanceof BadRequestException ||
         error instanceof NotFoundException
       ) {
         throw error;
       }
-      this.logger.error(`Failed to create variant attribute: ${error.message}`);
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to create variant attribute: ${message}`);
       throw new InternalServerErrorException(
         'Failed to create variant attribute',
       );
@@ -94,8 +94,9 @@ export class VariantAttributeService {
         relations: ['attributeValue', 'attributeValue.attribute'],
       });
       return attributes;
-    } catch (error) {
-      this.logger.error(`Failed to fetch variant attributes: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to fetch variant attributes: ${message}`);
       throw new InternalServerErrorException(
         'Failed to fetch variant attributes',
       );
@@ -108,8 +109,9 @@ export class VariantAttributeService {
         relations: ['variant', 'attributeValue', 'attributeValue.attribute'],
       });
       return attributes;
-    } catch (error) {
-      this.logger.error(`Failed to fetch variant attributes: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to fetch variant attributes: ${message}`);
       throw new InternalServerErrorException(
         'Failed to fetch variant attributes',
       );

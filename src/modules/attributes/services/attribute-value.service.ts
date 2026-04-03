@@ -5,22 +5,22 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { AttributeValue } from '../entities/attribute-value.entity';
 import { CreateAttributeValueDto } from '../dto/create-attribute-value.dto';
 import { Attribute } from '../entities/attribute.entity';
 
 @Injectable()
 export class AttributeValueService {
-  private attributeValueRepository: Repository<AttributeValue>;
-  private attributeRepository: Repository<Attribute>;
   private readonly logger = new Logger(AttributeValueService.name);
 
-  constructor(private dataSource: DataSource) {
-    this.attributeValueRepository =
-      this.dataSource.getRepository(AttributeValue);
-    this.attributeRepository = this.dataSource.getRepository(Attribute);
-  }
+  constructor(
+    @InjectRepository(AttributeValue)
+    private attributeValueRepository: Repository<AttributeValue>,
+    @InjectRepository(Attribute)
+    private attributeRepository: Repository<Attribute>,
+  ) {}
 
   async create(
     createAttributeValueDto: CreateAttributeValueDto,
@@ -62,14 +62,15 @@ export class AttributeValueService {
         `Attribute value created: ${value} for attribute ${attribute_id}`,
       );
       return savedValue;
-    } catch (error) {
+    } catch (error: unknown) {
       if (
         error instanceof BadRequestException ||
         error instanceof NotFoundException
       ) {
         throw error;
       }
-      this.logger.error(`Failed to create attribute value: ${error.message}`);
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to create attribute value: ${message}`);
       throw new InternalServerErrorException(
         'Failed to create attribute value',
       );
@@ -82,8 +83,9 @@ export class AttributeValueService {
         where: { attribute_id },
       });
       return values;
-    } catch (error) {
-      this.logger.error(`Failed to fetch attribute values: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to fetch attribute values: ${message}`);
       throw new InternalServerErrorException(
         'Failed to fetch attribute values',
       );
@@ -96,8 +98,9 @@ export class AttributeValueService {
         relations: ['attribute'],
       });
       return values;
-    } catch (error) {
-      this.logger.error(`Failed to fetch attribute values: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to fetch attribute values: ${message}`);
       throw new InternalServerErrorException(
         'Failed to fetch attribute values',
       );
