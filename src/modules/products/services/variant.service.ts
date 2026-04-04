@@ -6,21 +6,18 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Variant } from '../entities/variant.entity';
-import { Product } from '../entities/product.entity';
-import { VariantAttribute } from '../../variants/entities/variant-attribute.entity';
+import { Variant, VariantAttribute } from '../entities';
 import { AttributeValue } from '../../attributes/entities/attribute-value.entity';
 import { Attribute } from '../../attributes/entities/attribute.entity';
+import { VariantRepository, ProductRepository } from '../repositories';
 
 @Injectable()
 export class VariantService {
   private readonly logger = new Logger(VariantService.name);
 
   constructor(
-    @InjectRepository(Variant)
-    private variantRepository: Repository<Variant>,
-    @InjectRepository(Product)
-    private productRepository: Repository<Product>,
+    private variantRepository: VariantRepository,
+    private productRepository: ProductRepository,
     @InjectRepository(VariantAttribute)
     private variantAttributeRepository: Repository<VariantAttribute>,
     @InjectRepository(AttributeValue)
@@ -76,12 +73,10 @@ export class VariantService {
         throw new BadRequestException('Stock must be a non-negative integer');
       }
 
-      // ============ PRODUCT VALIDATION ============
-
       // Check if product exists
-      const product = await this.productRepository.findOne({
-        where: { id: createVariantDto.product_id },
-      });
+      const product = await this.productRepository.findById(
+        createVariantDto.product_id,
+      );
 
       if (!product) {
         throw new NotFoundException(
@@ -89,49 +84,49 @@ export class VariantService {
         );
       }
 
-      // ============ DUPLICATE PREVENTION ============
+      // Create combination key from attribute values (human-readable format like "red-M-cotton")
+      const attributeValues = await Promise.all(
+        createVariantDto.attributeValueIds.map(async (id) => {
+          const attrValue = await this.attributeValueRepository.findOne({
+            where: { id },
+          });
+          return attrValue?.value || '';
+        }),
+      );
 
-      // Create combination key from attribute value IDs (sorted for consistency)
-      // Sorting ensures [1,2] and [2,1] create the same key
-      const combinationKey = createVariantDto.attributeValueIds
-        .sort((a: number, b: number) => a - b)
-        .join('-');
+      // Sort attribute values alphabetically for consistency
+      const sortedAttributeValues = attributeValues.sort();
+      const combinationKey = sortedAttributeValues.join('-');
 
       this.logger.log(
-        `Checking for duplicate variant with combination key: ${combinationKey} for product ${createVariantDto.product_id}`,
+        `Creating combination key: ${combinationKey} for attributes: [${attributeValues.join(', ')}]`,
       );
 
       // Check if variant with this exact combination already exists
-      const existingVariant = await this.variantRepository.findOne({
-        where: {
-          product_id: createVariantDto.product_id,
-          combination_key: combinationKey,
-        },
-      });
+      const existingVariant =
+        await this.variantRepository.findByProductAndCombinationKey(
+          createVariantDto.product_id,
+          combinationKey,
+        );
 
       if (existingVariant) {
         this.logger.warn(
-          `Duplicate variant attempted: Product ${createVariantDto.product_id}, Combination ${combinationKey}`,
+          `Duplicate variant attempted for product ${createVariantDto.product_id}`,
         );
         throw new BadRequestException(
-          `A variant with attribute combination [${createVariantDto.attributeValueIds.sort((a: number, b: number) => a - b).join(', ')}] already exists for this product (ID: ${existingVariant.id}). Cannot create duplicate.`,
+          `A variant with this attribute combination already exists for this product`,
         );
       }
 
-      // ============ CREATE VARIANT ============
-
-      const variant = this.variantRepository.create({
+      // Create variant
+      const savedVariant = await this.variantRepository.create({
         product_id: createVariantDto.product_id,
         combination_key: combinationKey,
         price: createVariantDto.price,
         stock: createVariantDto.stock,
       });
 
-      const savedVariant = await this.variantRepository.save(variant);
-
-      // ============ CREATE VARIANT ATTRIBUTES ============
-
-      // Create VariantAttribute records to link variant with attribute values
+      // Create VariantAttribute records
       for (const attributeValueId of createVariantDto.attributeValueIds) {
         const variantAttribute = this.variantAttributeRepository.create({
           variant_id: savedVariant.id,
@@ -140,9 +135,7 @@ export class VariantService {
         await this.variantAttributeRepository.save(variantAttribute);
       }
 
-      this.logger.log(
-        `Variant created successfully - ID: ${savedVariant.id}, Product: ${createVariantDto.product_id}, Combination: ${combinationKey}, Price: ${createVariantDto.price}, Stock: ${createVariantDto.stock}`,
-      );
+      this.logger.log(`Variant created successfully - ID: ${savedVariant.id}`);
 
       return savedVariant;
     } catch (error: unknown) {
@@ -154,17 +147,16 @@ export class VariantService {
 
   async findAllVariants(productId?: number): Promise<any[]> {
     try {
-      const query: any = {};
+      let variants: Variant[];
+
       if (productId) {
-        query.where = { product_id: productId };
+        variants = await this.variantRepository.findByProductId(productId);
         this.logger.log(`Fetching variants for product ${productId}`);
       } else {
+        variants = await this.variantRepository.findAll();
         this.logger.log('Fetching all variants');
       }
 
-      const variants = await this.variantRepository.find(query);
-
-      // Transform variants to include attribute values instead of combination_key
       const enrichedVariants = await Promise.all(
         variants.map(async (variant) => {
           const variantAttributes = await this.variantAttributeRepository.find({
@@ -173,12 +165,7 @@ export class VariantService {
 
           const attributeValues: string[] = [];
 
-          // Sort variant attributes by attribute_value_id for consistency
-          const sortedAttributes = variantAttributes.sort(
-            (a, b) => (a.attribute_value_id || 0) - (b.attribute_value_id || 0),
-          );
-
-          for (const variantAttr of sortedAttributes) {
+          for (const variantAttr of variantAttributes) {
             const attrValue = await this.attributeValueRepository.findOne({
               where: { id: variantAttr.attribute_value_id },
             });
@@ -206,12 +193,10 @@ export class VariantService {
     }
   }
 
-  async findOne(id: number): Promise<any> {
+  async findOne(id: number): Promise<Variant> {
     try {
       this.logger.log(`Fetching variant ${id}`);
-      const variant = await this.variantRepository.findOne({
-        where: { id },
-      });
+      const variant = await this.variantRepository.findById(id);
 
       if (!variant) {
         throw new NotFoundException(`Variant with id ${id} not found`);
@@ -225,19 +210,29 @@ export class VariantService {
     }
   }
 
-  async updateStock(id: number, newStock: number): Promise<any> {
+  async updateStock(id: number, newStock: number): Promise<Variant> {
     try {
       this.logger.log(`Updating stock for variant ${id} to ${newStock}`);
 
       const variant = await this.findOne(id);
-      variant.stock = newStock;
 
-      const updated = await this.variantRepository.save(variant);
+      if (!variant) {
+        throw new NotFoundException(`Variant with id ${id} not found`);
+      }
+
+      const updated = await this.variantRepository.update(id, {
+        stock: newStock,
+      });
+
+      if (!updated) {
+        throw new Error('Failed to update variant stock');
+      }
+
       this.logger.log(`Variant ${id} stock updated successfully`);
       return updated;
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Failed to update stock: ${message}`);
+      this.logger.error(`Failed to update variant stock: ${message}`);
       throw error;
     }
   }
@@ -247,7 +242,8 @@ export class VariantService {
       this.logger.log(`Deleting variant ${id}`);
 
       const variant = await this.findOne(id);
-      await this.variantRepository.remove(variant);
+      await this.variantRepository.delete(id);
+
       this.logger.log(`Variant ${id} deleted successfully`);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
@@ -261,28 +257,21 @@ export class VariantService {
       this.logger.log(`Fetching attributes for product ${productId}`);
 
       // Verify product exists
-      const product = await this.productRepository.findOne({
-        where: { id: productId },
-      });
+      const product = await this.productRepository.findById(productId);
 
       if (!product) {
         throw new NotFoundException(`Product with id ${productId} not found`);
       }
 
       // Get all variants for this product
-      const variants = await this.variantRepository.find({
-        where: { product_id: productId },
-      });
+      const variants = await this.variantRepository.findByProductId(productId);
 
       if (variants.length === 0) {
         return [];
       }
 
       // Get all variant attributes from all variants
-      const allVariantAttributes: {
-        attribute_id?: number;
-        [key: string]: any;
-      }[] = [];
+      const allVariantAttributes: any[] = [];
 
       for (const variant of variants) {
         const variantAttributes = await this.variantAttributeRepository.find({
@@ -291,21 +280,16 @@ export class VariantService {
         allVariantAttributes.push(...variantAttributes);
       }
 
-      // Get unique attribute IDs
-      const uniqueAttributeIds = [
-        ...new Set(
-          allVariantAttributes.map((va) => {
-            // We need to get the attribute_id from the attribute_value
-            return va.attribute_value_id;
-          }),
-        ),
+      // Get unique attribute value IDs
+      const uniqueAttributeValueIds = [
+        ...new Set(allVariantAttributes.map((va) => va.attribute_value_id)),
       ];
 
-      // Get all unique attributes and their values for those attributes
+      // Get all unique attributes and their values
       const attributes: any[] = [];
       const processedAttributeIds = new Set<number>();
 
-      for (const attributeValueId of uniqueAttributeIds) {
+      for (const attributeValueId of uniqueAttributeValueIds) {
         const attributeValue = await this.attributeValueRepository.findOne({
           where: { id: attributeValueId },
         });
