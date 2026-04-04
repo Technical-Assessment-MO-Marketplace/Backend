@@ -12,12 +12,7 @@ import {
 } from '@nestjs/common';
 import { AttributeService } from '../services/attribute.service';
 import { AttributeValueService } from '../services/attribute-value.service';
-import { VariantAttributeService } from '../services/variant-attribute.service';
-import {
-  CreateAttributeDto,
-  CreateAttributeValueDto,
-  CreateVariantAttributeDto,
-} from '../dto';
+import { CreateAttributeDto, CreateAttributeValueDto } from '../dto';
 import { JwtGuard } from '../../auth/guards/jwt.guard';
 import { AdminGuard } from '../../auth/guards/admin.guard';
 
@@ -29,7 +24,6 @@ export class AttributesController {
   constructor(
     private attributeService: AttributeService,
     private attributeValueService: AttributeValueService,
-    private variantAttributeService: VariantAttributeService,
   ) {}
 
   // ATTRIBUTES ENDPOINTS
@@ -112,46 +106,5 @@ export class AttributesController {
     this.logger.log(`Deleting attribute: ${id}`);
     const result = await this.attributeService.delete(id);
     return result;
-  }
-
-  // VARIANT ATTRIBUTES ENDPOINTS
-
-  @Post('variant-attributes')
-  @HttpCode(HttpStatus.CREATED)
-  async createVariantAttribute(
-    @Body() createVariantAttributeDto: CreateVariantAttributeDto,
-  ) {
-    this.logger.log(
-      `Creating variant attribute for variant ${createVariantAttributeDto.variant_id}`,
-    );
-    const variantAttribute = await this.variantAttributeService.create(
-      createVariantAttributeDto,
-    );
-    return {
-      id: variantAttribute.id,
-      variant_id: variantAttribute.variant_id,
-      attribute_value_id: variantAttribute.attribute_value_id,
-      message: 'Variant attribute created successfully',
-    };
-  }
-
-  @Get('variant-attributes')
-  async getAllVariantAttributes() {
-    this.logger.log('Fetching all variant attributes');
-    const variantAttributes = await this.variantAttributeService.findAll();
-    return {
-      variantAttributes,
-      total: variantAttributes.length,
-    };
-  }
-
-  @Get('variant/:id/attributes')
-  async getVariantAttributes(@Param('id') id: number) {
-    this.logger.log(`Fetching attributes for variant ${id}`);
-    const attributes = await this.variantAttributeService.findByVariant(id);
-    return {
-      attributes,
-      total: attributes.length,
-    };
   }
 }
