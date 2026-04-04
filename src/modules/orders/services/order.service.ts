@@ -12,16 +12,16 @@ import { Variant } from '../../products/entities/variant.entity';
 import { Product } from '../../products/entities/product.entity';
 import { User } from '../../auth/entities/user.entity';
 import { CreateOrderDto, CreateOrderItemDto } from '../dto';
+import { OrderRepository } from '../repositories/order.repository';
+import { OrderItemRepository } from '../repositories/order-item.repository';
 
 @Injectable()
 export class OrderService {
   private readonly logger = new Logger(OrderService.name);
 
   constructor(
-    @InjectRepository(Order)
-    private orderRepository: Repository<Order>,
-    @InjectRepository(OrderItem)
-    private orderItemRepository: Repository<OrderItem>,
+    private orderRepository: OrderRepository,
+    private orderItemRepository: OrderItemRepository,
     @InjectRepository(Variant)
     private variantRepository: Repository<Variant>,
     @InjectRepository(Product)
@@ -181,10 +181,7 @@ export class OrderService {
     try {
       this.logger.log(`Fetching order ${id}`);
 
-      const order = await this.orderRepository.findOne({
-        where: { id },
-        relations: ['items', 'items.product', 'items.variant', 'user'],
-      });
+      const order = await this.orderRepository.findById(id);
 
       if (!order) {
         throw new NotFoundException(`Order with id ${id} not found`);
@@ -203,11 +200,7 @@ export class OrderService {
     try {
       this.logger.log(`Fetching orders for user ${userId}`);
 
-      const orders = await this.orderRepository.find({
-        where: { user_id: userId },
-        relations: ['items', 'items.product', 'items.variant'],
-        order: { created_at: 'DESC' },
-      });
+      const orders = await this.orderRepository.findByUserId(userId);
 
       return orders;
     } catch (error) {
@@ -222,10 +215,7 @@ export class OrderService {
     try {
       this.logger.log('Fetching all orders');
 
-      const orders = await this.orderRepository.find({
-        relations: ['items', 'items.product', 'items.variant', 'user'],
-        order: { created_at: 'DESC' },
-      });
+      const orders = await this.orderRepository.findAll();
 
       return orders;
     } catch (error) {
@@ -243,14 +233,17 @@ export class OrderService {
     try {
       this.logger.log(`Updating order ${id} status to ${status}`);
 
-      const order = await this.orderRepository.findOne({ where: { id } });
+      const order = await this.orderRepository.findById(id);
 
       if (!order) {
         throw new NotFoundException(`Order with id ${id} not found`);
       }
 
-      order.status = status;
-      const updated = await this.orderRepository.save(order);
+      const updated = await this.orderRepository.update(id, { status });
+
+      if (!updated) {
+        throw new Error('Failed to update order');
+      }
 
       return updated;
     } catch (error) {

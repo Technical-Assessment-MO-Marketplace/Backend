@@ -3,7 +3,6 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  CreateDateColumn,
   JoinColumn,
   Index,
 } from 'typeorm';
@@ -48,7 +47,4 @@ export class OrderItem {
 
   @Column({ type: 'float', comment: 'Price at time of order' })
   price?: number;
-
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  created_at?: Date;
 }
