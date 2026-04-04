@@ -54,9 +54,10 @@ export class AuthService {
         user,
         'user',
       );
-    } catch (error) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
       this.logger.error(
-        `Registration failed for email ${registerDto.email}: ${error.message}`,
+        `Registration failed for email ${registerDto.email}: ${message}`,
       );
       throw this.responseHandlerService.handleAuthError(error);
     }
@@ -91,10 +92,9 @@ export class AuthService {
         user,
         user.role?.name || 'user',
       );
-    } catch (error) {
-      this.logger.error(
-        `Login failed for email ${loginDto.email}: ${error.message}`,
-      );
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Login failed for email ${loginDto.email}: ${message}`);
       throw this.responseHandlerService.handleAuthError(error);
     }
   }
@@ -129,10 +129,9 @@ export class AuthService {
       // Return response
       this.logger.log(`Admin created successfully: ${adminEmail}`);
       return this.responseHandlerService.formatAdminCreationResponse(newAdmin);
-    } catch (error) {
-      this.logger.error(
-        `Failed to create admin ${adminEmail}: ${error.message}`,
-      );
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to create admin ${adminEmail}: ${message}`);
       throw this.responseHandlerService.handleAuthError(error);
     }
   }
