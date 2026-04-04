@@ -46,7 +46,9 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async getProfile(@Request() req) {
     return {
-      user: req.user,
+      user: {
+        email: req.user.email,
+      },
       message: 'Profile retrieved successfully',
     };
   }
