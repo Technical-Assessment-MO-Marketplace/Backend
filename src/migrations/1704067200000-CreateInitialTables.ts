@@ -560,12 +560,54 @@ export class CreateInitialTables1704067200000 implements MigrationInterface {
         name: 'IDX_order_items_variant_id',
       }),
     );
+
+    // Seed roles
+    await queryRunner.query(`
+      INSERT INTO roles (id, name) VALUES
+      (1, 'admin'),
+      (2, 'user')
+    `);
+
+    // Seed attributes
+    await queryRunner.query(`
+      INSERT INTO attributes (id, name) VALUES
+      (1, 'Color'),
+      (2, 'Size'),
+      (3, 'Material')
+    `);
+
+    // Seed attribute values - Colors
+    await queryRunner.query(`
+      INSERT INTO attribute_values (attribute_id, value) VALUES
+      (1, 'Red'),
+      (1, 'Blue')
+    `);
+
+    // Seed attribute values - Sizes
+    await queryRunner.query(`
+      INSERT INTO attribute_values (attribute_id, value) VALUES
+      (2, 'M'),
+      (2, 'L')
+    `);
+
+    // Seed attribute values - Materials
+    await queryRunner.query(`
+      INSERT INTO attribute_values (attribute_id, value) VALUES
+      (3, 'Cotton'),
+      (3, 'Polyester')
+    `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    // Delete seed data
+    await queryRunner.query('DELETE FROM attribute_values');
+    await queryRunner.query('DELETE FROM attributes');
+    await queryRunner.query('DELETE FROM roles');
+
     // Drop indexes
     await queryRunner.dropIndex('order_items', 'IDX_order_items_variant_id');
     await queryRunner.dropIndex('order_items', 'IDX_order_items_order_id');
+    await queryRunner.dropIndex('order_items', 'IDX_order_items_product_id');
     await queryRunner.dropIndex('orders', 'IDX_orders_status');
     await queryRunner.dropIndex('orders', 'IDX_orders_user_id');
     await queryRunner.dropIndex(
@@ -582,6 +624,7 @@ export class CreateInitialTables1704067200000 implements MigrationInterface {
     );
     await queryRunner.dropIndex('variants', 'IDX_variants_product_id');
     await queryRunner.dropIndex('products', 'IDX_products_created_by');
+    await queryRunner.dropIndex('users', 'IDX_users_email');
     await queryRunner.dropIndex('users', 'IDX_users_role_id');
 
     // Drop tables in reverse order of creation
