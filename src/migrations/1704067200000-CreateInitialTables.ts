@@ -567,35 +567,6 @@ export class CreateInitialTables1704067200000 implements MigrationInterface {
       (1, 'admin'),
       (2, 'user')
     `);
-
-    // Seed attributes
-    await queryRunner.query(`
-      INSERT INTO attributes (id, name) VALUES
-      (1, 'Color'),
-      (2, 'Size'),
-      (3, 'Material')
-    `);
-
-    // Seed attribute values - Colors
-    await queryRunner.query(`
-      INSERT INTO attribute_values (attribute_id, value) VALUES
-      (1, 'Red'),
-      (1, 'Blue')
-    `);
-
-    // Seed attribute values - Sizes
-    await queryRunner.query(`
-      INSERT INTO attribute_values (attribute_id, value) VALUES
-      (2, 'M'),
-      (2, 'L')
-    `);
-
-    // Seed attribute values - Materials
-    await queryRunner.query(`
-      INSERT INTO attribute_values (attribute_id, value) VALUES
-      (3, 'Cotton'),
-      (3, 'Polyester')
-    `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
