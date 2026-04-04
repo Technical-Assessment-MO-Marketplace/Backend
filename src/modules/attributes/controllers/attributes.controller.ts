@@ -105,7 +105,7 @@ export class AttributesController {
     };
   }
 
-  // Delete specific attribute (must be after more specific routes)
+  // Delete specific attribute
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   async deleteAttribute(@Param('id') id: number) {
