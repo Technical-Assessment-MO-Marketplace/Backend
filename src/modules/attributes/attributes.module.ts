@@ -9,6 +9,12 @@ import {
   AttributeValueService,
   VariantAttributeService,
 } from './services';
+import {
+  AttributeRepository,
+  AttributeValueRepository,
+  VariantAttributeRepository,
+  VariantRepository,
+} from './repositories';
 import { AttributesController } from './controllers/attributes.controller';
 
 @Module({
@@ -21,7 +27,23 @@ import { AttributesController } from './controllers/attributes.controller';
     ]),
   ],
   controllers: [AttributesController],
-  providers: [AttributeService, AttributeValueService, VariantAttributeService],
-  exports: [AttributeService, AttributeValueService, VariantAttributeService],
+  providers: [
+    AttributeService,
+    AttributeValueService,
+    VariantAttributeService,
+    AttributeRepository,
+    AttributeValueRepository,
+    VariantAttributeRepository,
+    VariantRepository,
+  ],
+  exports: [
+    AttributeService,
+    AttributeValueService,
+    VariantAttributeService,
+    AttributeRepository,
+    AttributeValueRepository,
+    VariantAttributeRepository,
+    VariantRepository,
+  ],
 })
 export class AttributesModule {}

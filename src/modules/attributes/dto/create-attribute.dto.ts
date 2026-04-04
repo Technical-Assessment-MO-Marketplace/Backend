@@ -4,5 +4,5 @@ export class CreateAttributeDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(1)
-  name: string;
+  name!: string;
 }
