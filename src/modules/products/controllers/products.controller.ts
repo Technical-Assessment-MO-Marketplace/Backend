@@ -76,44 +76,57 @@ export class ProductsController {
     };
   }
 
-  //  VARIANT ENDPOINTS
+  // VARIANT ENDPOINTS
 
-  @Post('variants')
+  @Post(':productId/variants')
   @HttpCode(HttpStatus.CREATED)
-  async createVariant(@Body() createVariantDto: CreateVariantDto) {
-    this.logger.log(
-      `Creating variant for product ${createVariantDto.product_id}`,
-    );
-    const variant = await this.variantService.createVariant(createVariantDto);
+  async createVariant(
+    @Param('productId') productId: number,
+    @Body() createVariantDto: CreateVariantDto,
+  ) {
+    this.logger.log(`Creating variant for product ${productId}`);
+    const variant = await this.variantService.createVariant({
+      ...createVariantDto,
+      product_id: productId,
+    });
     return {
       id: variant.id,
       product_id: variant.product_id,
-      combination_key: variant.combination_key,
       price: variant.price,
       stock: variant.stock,
+      combination_key: variant.combination_key,
       message: 'Variant created successfully',
     };
   }
 
-  @Patch('variant/:id/stock')
-  async updateVariantStock(
-    @Param('id') id: number,
-    @Body() updateData: { stock: number },
+  @Patch(':productId/variants/:variantId')
+  async updateVariant(
+    @Param('productId') productId: number,
+    @Param('variantId') variantId: number,
+    @Body() updateData: Partial<CreateVariantDto>,
   ) {
-    this.logger.log(`Updating stock for variant ${id}`);
-    const variant = await this.variantService.updateStock(id, updateData.stock);
+    this.logger.log(`Updating variant ${variantId} for product ${productId}`);
+    const variant = await this.variantService.updateStock(
+      variantId,
+      updateData.stock || 0,
+    );
     return {
-      id: variant.id,
-      stock: variant.stock,
-      message: 'Variant stock updated successfully',
+      id: variant?.id,
+      product_id: variant?.product_id,
+      price: variant?.price,
+      stock: variant?.stock,
+      message: 'Variant updated successfully',
     };
   }
 
-  @Delete('variant/:id')
+  @Delete(':productId/variants/:variantId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteVariant(@Param('id') id: number) {
-    this.logger.log(`Deleting variant ${id}`);
-    await this.variantService.deleteVariant(id);
+  async deleteVariant(
+    @Param('productId') productId: number,
+    @Param('variantId') variantId: number,
+  ) {
+    this.logger.log(`Deleting variant ${variantId} from product ${productId}`);
+    await this.variantService.deleteVariant(variantId);
     return {
       message: 'Variant deleted successfully',
     };

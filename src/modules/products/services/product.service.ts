@@ -4,19 +4,15 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Product } from '../entities/product.entity';
+import { Product } from '../entities';
 import { CreateProductDto } from '../dto';
+import { ProductRepository } from '../repositories';
 
 @Injectable()
 export class ProductService {
   private readonly logger = new Logger(ProductService.name);
 
-  constructor(
-    @InjectRepository(Product)
-    private productRepository: Repository<Product>,
-  ) {}
+  constructor(private productRepository: ProductRepository) {}
 
   async create(
     createProductDto: CreateProductDto,
@@ -28,9 +24,9 @@ export class ProductService {
       );
 
       // Check if product name already exists
-      const existingProduct = await this.productRepository.findOne({
-        where: { name: createProductDto.name },
-      });
+      const existingProduct = await this.productRepository.findByName(
+        createProductDto.name,
+      );
 
       if (existingProduct) {
         throw new BadRequestException(
@@ -38,13 +34,12 @@ export class ProductService {
         );
       }
 
-      const product = this.productRepository.create({
+      const saved = await this.productRepository.create({
         name: createProductDto.name,
         description: createProductDto.description,
         created_by: userId,
       });
 
-      const saved = await this.productRepository.save(product);
       this.logger.log(`Product created successfully with id ${saved.id}`);
       return saved;
     } catch (error: unknown) {
@@ -58,7 +53,7 @@ export class ProductService {
   async findAll(): Promise<Product[]> {
     try {
       this.logger.log('Fetching all products');
-      const products = await this.productRepository.find();
+      const products = await this.productRepository.findAll();
       return products;
     } catch (error: unknown) {
       const errorMessage =
@@ -71,9 +66,7 @@ export class ProductService {
   async findOne(id: number): Promise<Product> {
     try {
       this.logger.log(`Fetching product ${id}`);
-      const product = await this.productRepository.findOne({
-        where: { id },
-      });
+      const product = await this.productRepository.findById(id);
 
       if (!product) {
         throw new NotFoundException(`Product with id ${id} not found`);
@@ -98,9 +91,9 @@ export class ProductService {
       const product = await this.findOne(id);
 
       if (updateData.name && updateData.name !== product.name) {
-        const existingProduct = await this.productRepository.findOne({
-          where: { name: updateData.name },
-        });
+        const existingProduct = await this.productRepository.findByName(
+          updateData.name,
+        );
 
         if (existingProduct) {
           throw new BadRequestException(
@@ -109,8 +102,12 @@ export class ProductService {
         }
       }
 
-      Object.assign(product, updateData);
-      const updated = await this.productRepository.save(product);
+      const updated = await this.productRepository.update(id, updateData);
+
+      if (!updated) {
+        throw new Error('Failed to update product');
+      }
+
       this.logger.log(`Product ${id} updated successfully`);
       return updated;
     } catch (error: unknown) {
@@ -126,7 +123,7 @@ export class ProductService {
       this.logger.log(`Deleting product ${id}`);
 
       const product = await this.findOne(id);
-      await this.productRepository.remove(product);
+      await this.productRepository.delete(id);
       this.logger.log(`Product ${id} deleted successfully`);
     } catch (error: unknown) {
       const errorMessage =
