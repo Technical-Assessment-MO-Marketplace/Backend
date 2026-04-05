@@ -183,10 +183,7 @@ npm install
 # 2. Configure
 # Create .env with database credentials
 
-# 3. Setup Database
-npm run migration:run
-
-# 4. Run
+# 3. Run
 npm run start:dev
 
 # 5. Test
