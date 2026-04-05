@@ -30,6 +30,11 @@ export class OrderService {
   ) {}
 
   async createOrder(createOrderDto: CreateOrderDto, user: any): Promise<Order> {
+    // Validate items array is not empty
+    if (!createOrderDto.items || createOrderDto.items.length === 0) {
+      throw new BadRequestException('Order must contain at least one item');
+    }
+
     this.logger.log(
       `Creating order for user ${user.id} with ${createOrderDto.items.length} items`,
     );
@@ -199,22 +204,23 @@ export class OrderService {
         total_amount: order.total_amount,
         status: order.status,
         created_at: order.created_at,
-        items: order.items?.map((item) => ({
-          id: item.id,
-          quantity: item.quantity,
-          price: item.price,
-          product: {
-            id: item.product?.id,
-            name: item.product?.name,
-            description: item.product?.description,
-          },
-          variant: {
-            id: item.variant?.id,
-            combination_key: item.variant?.combination_key,
-            price: item.variant?.price,
-            stock: item.variant?.stock,
-          },
-        })) || [],
+        items:
+          order.items?.map((item) => ({
+            id: item.id,
+            quantity: item.quantity,
+            price: item.price,
+            product: {
+              id: item.product?.id,
+              name: item.product?.name,
+              description: item.product?.description,
+            },
+            variant: {
+              id: item.variant?.id,
+              combination_key: item.variant?.combination_key,
+              price: item.variant?.price,
+              stock: item.variant?.stock,
+            },
+          })) || [],
       }));
     } catch (error) {
       const errorMessage =

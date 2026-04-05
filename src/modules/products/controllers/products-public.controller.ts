@@ -72,18 +72,32 @@ export class ProductsPublicController {
     @Param('productId') productId: number,
     @Body() filterVariantDto: FilterVariantDto,
   ) {
-    this.logger.log(
-      `Filtering variants for product ${productId} with attributes: [${filterVariantDto.attributeValueIds.join(', ')}]`,
-    );
-    const variants = await this.variantService.filterVariantsByAttributes(
-      productId,
-      filterVariantDto.attributeValueIds,
-    );
-    return {
-      productId,
-      variants,
-      total: variants.length,
-      message: 'Filtered variants retrieved successfully',
-    };
+    try {
+      this.logger.log(
+        `Filtering variants for product ${productId} with attributes: [${filterVariantDto.attributeValueIds.join(', ')}]`,
+      );
+
+      const variants = await this.variantService.filterVariantsByAttributes(
+        productId,
+        filterVariantDto.attributeValueIds,
+      );
+
+      return {
+        productId,
+        variants,
+        total: variants.length,
+        message:
+          variants.length > 0
+            ? 'Filtered variants retrieved successfully'
+            : 'No variants found matching your filters',
+      };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to filter variants';
+      this.logger.error(
+        `Filtering failed for product ${productId}: ${message}`,
+      );
+      throw error;
+    }
   }
 }
