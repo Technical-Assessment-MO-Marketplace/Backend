@@ -1,13 +1,16 @@
 import {
   Controller,
   Get,
+  Post,
   Param,
+  Body,
   Logger,
   HttpStatus,
   HttpCode,
 } from '@nestjs/common';
 import { ProductService } from '../services/product.service';
 import { VariantService } from '../services/variant.service';
+import { FilterVariantDto } from '../dto';
 
 @Controller('products')
 export class ProductsPublicController {
@@ -60,6 +63,27 @@ export class ProductsPublicController {
       attributes,
       total: attributes.length,
       message: 'Product attributes retrieved successfully',
+    };
+  }
+
+  @Post(':productId/variants/filter')
+  @HttpCode(HttpStatus.OK)
+  async filterVariants(
+    @Param('productId') productId: number,
+    @Body() filterVariantDto: FilterVariantDto,
+  ) {
+    this.logger.log(
+      `Filtering variants for product ${productId} with attributes: [${filterVariantDto.attributeValueIds.join(', ')}]`,
+    );
+    const variants = await this.variantService.filterVariantsByAttributes(
+      productId,
+      filterVariantDto.attributeValueIds,
+    );
+    return {
+      productId,
+      variants,
+      total: variants.length,
+      message: 'Filtered variants retrieved successfully',
     };
   }
 }

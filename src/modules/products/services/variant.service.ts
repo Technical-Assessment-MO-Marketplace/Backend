@@ -335,4 +335,109 @@ export class VariantService {
       throw new BadRequestException('Failed to fetch product attributes');
     }
   }
+
+  async filterVariantsByAttributes(
+    productId: number,
+    attributeValueIds: number[],
+  ): Promise<any[]> {
+    try {
+      if (!attributeValueIds || attributeValueIds.length === 0) {
+        throw new BadRequestException(
+          'At least one attribute value must be provided for filtering',
+        );
+      }
+
+      this.logger.log(
+        `Filtering variants for product ${productId} with attributes: [${attributeValueIds.join(', ')}]`,
+      );
+
+      // Verify product exists
+      const product = await this.productRepository.findById(productId);
+
+      if (!product) {
+        throw new NotFoundException(`Product with id ${productId} not found`);
+      }
+
+      // Get all variants for this product
+      const variants = await this.variantRepository.findByProductId(productId);
+
+      if (variants.length === 0) {
+        return [];
+      }
+
+      // Filter variants that have ALL selected attribute values
+      const filteredVariants: any[] = [];
+
+      for (const variant of variants) {
+        const variantAttributes = await this.variantAttributeRepository.find({
+          where: { variant_id: variant.id },
+        });
+
+        const variantAttributeValueIds = variantAttributes.map(
+          (va) => va.attribute_value_id,
+        );
+
+        // Check if variant has all selected attribute values
+        const hasAllAttributes = attributeValueIds.every((attrValueId) =>
+          variantAttributeValueIds.includes(attrValueId),
+        );
+
+        if (hasAllAttributes) {
+          // Get detailed info for this variant
+          const enrichedVariant = await this.enrichVariantWithDetails(
+            variant,
+            variantAttributes,
+          );
+          filteredVariants.push(enrichedVariant);
+        }
+      }
+
+      this.logger.log(
+        `Found ${filteredVariants.length} variants matching the selected attributes`,
+      );
+      return filteredVariants;
+    } catch (error: unknown) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to filter variants: ${message}`);
+      throw new BadRequestException('Failed to filter variants');
+    }
+  }
+
+  private async enrichVariantWithDetails(
+    variant: Variant,
+    variantAttributes: VariantAttribute[],
+  ): Promise<any> {
+    const attributeDetails: any[] = [];
+
+    for (const variantAttr of variantAttributes) {
+      const attributeValue = await this.attributeValueRepository.findOne({
+        where: { id: variantAttr.attribute_value_id },
+      });
+
+      if (attributeValue) {
+        const attribute = await this.attributeRepository.findOne({
+          where: { id: attributeValue.attribute_id },
+        });
+
+        attributeDetails.push({
+          attribute_name: attribute?.name || '',
+          attribute_value: attributeValue.value,
+          attribute_value_id: attributeValue.id,
+        });
+      }
+    }
+
+    return {
+      id: variant.id,
+      product_id: variant.product_id,
+      combination_key: variant.combination_key,
+      price: variant.price,
+      stock: variant.stock,
+      created_at: variant.created_at,
+      attributes: attributeDetails,
+    };
+  }
 }
