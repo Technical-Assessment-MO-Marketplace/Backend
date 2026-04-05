@@ -41,6 +41,12 @@ MO Marketplace Backend is a NestJS based REST API for a marketplace platform.
 
 ---
 
+## Database Schema
+
+![Database Schema](./Images/DBSchema.png)
+
+---
+
 ## Setup Instructions
 
 ### Prerequisites
