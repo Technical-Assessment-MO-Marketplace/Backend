@@ -35,4 +35,7 @@ export class Product {
     eager: false,
   })
   variants?: any[];
+
+  @OneToMany('OrderItem', 'product', { cascade: false })
+  orderItems?: any[];
 }
