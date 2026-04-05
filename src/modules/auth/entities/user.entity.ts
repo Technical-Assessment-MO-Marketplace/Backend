@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { Role } from './role.entity';
@@ -31,4 +32,10 @@ export class User {
 
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at?: Date;
+
+  @OneToMany('Order', 'user', { cascade: false })
+  orders?: any[];
+
+  @OneToMany('Product', 'user', { cascade: false })
+  products?: any[];
 }
