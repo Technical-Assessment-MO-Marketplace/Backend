@@ -19,7 +19,9 @@ export class PasswordService {
       );
       return hashedPassword;
     } catch (error) {
-      this.logger.error(`Password hashing failed: ${error.message}`);
+      this.logger.error(
+        `Password hashing failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw new InternalServerErrorException('Failed to hash password');
     }
   }
@@ -41,7 +43,9 @@ export class PasswordService {
       if (error instanceof UnauthorizedException) {
         throw error;
       }
-      this.logger.error(`Password verification failed: ${error.message}`);
+      this.logger.error(
+        `Password verification failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw new InternalServerErrorException('Password verification error');
     }
   }
