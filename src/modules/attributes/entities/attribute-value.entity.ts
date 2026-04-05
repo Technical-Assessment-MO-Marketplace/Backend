@@ -26,8 +26,6 @@ export class AttributeValue {
   @JoinColumn({ name: 'attribute_id' })
   attribute?: any;
 
-  @OneToMany('VariantAttribute', 'attributeValue', {
-    cascade: true,
-  })
+  @OneToMany('VariantAttribute', 'attributeValue', { cascade: true })
   variantAttributes?: any[];
 }
