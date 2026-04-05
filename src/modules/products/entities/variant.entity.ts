@@ -3,6 +3,7 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  OneToMany,
   Index,
   JoinColumn,
 } from 'typeorm';
@@ -33,4 +34,10 @@ export class Variant {
   })
   @JoinColumn({ name: 'product_id' })
   product?: any;
+
+  @OneToMany('VariantAttribute', 'variant', { cascade: true })
+  variantAttributes?: any[];
+
+  @OneToMany('OrderItem', 'variant', { cascade: false })
+  orderItems?: any[];
 }
