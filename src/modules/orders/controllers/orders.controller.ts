@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   UseGuards,
   Request,
@@ -8,7 +9,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { OrderService } from '../services/order.service';
-import { CreateOrderDto } from '../dto';
+import { CreateOrderDto, OrderResponseDto } from '../dto';
 import { JwtGuard } from '../../auth/guards/jwt.guard';
 
 @Controller('orders')
@@ -16,6 +17,27 @@ export class OrderController {
   private readonly logger = new Logger(OrderController.name);
 
   constructor(private orderService: OrderService) {}
+
+  @Get()
+  @UseGuards(JwtGuard)
+  async getAllOrders() {
+    try {
+      this.logger.log('GET /orders - Fetching all orders with full details');
+
+      const orders = await this.orderService.getAllOrders();
+
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'Orders retrieved successfully',
+        data: orders,
+      };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to fetch orders: ${errorMessage}`);
+      throw error;
+    }
+  }
 
   @Post()
   @UseGuards(JwtGuard)

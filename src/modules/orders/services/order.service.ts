@@ -176,4 +176,51 @@ export class OrderService {
       await queryRunner.release();
     }
   }
+
+  async getAllOrders() {
+    this.logger.log('Fetching all orders with full details');
+
+    try {
+      const orders = await this.orderRepository.findAll();
+
+      if (!orders || orders.length === 0) {
+        this.logger.log('No orders found');
+        return [];
+      }
+
+      // Transform orders to response format
+      return orders.map((order) => ({
+        id: order.id,
+        user: {
+          id: order.user?.id,
+          name: order.user?.name,
+          email: order.user?.email,
+        },
+        total_amount: order.total_amount,
+        status: order.status,
+        created_at: order.created_at,
+        items: order.items?.map((item) => ({
+          id: item.id,
+          quantity: item.quantity,
+          price: item.price,
+          product: {
+            id: item.product?.id,
+            name: item.product?.name,
+            description: item.product?.description,
+          },
+          variant: {
+            id: item.variant?.id,
+            combination_key: item.variant?.combination_key,
+            price: item.variant?.price,
+            stock: item.variant?.stock,
+          },
+        })) || [],
+      }));
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to fetch orders: ${errorMessage}`);
+      throw error;
+    }
+  }
 }
