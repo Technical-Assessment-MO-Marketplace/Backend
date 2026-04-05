@@ -73,12 +73,16 @@ export class AuthService {
       const user = await this.userHelperService.findUserByEmailWithRole(email);
       if (!user) {
         this.logger.warn(`Login failed: User not found for email ${email}`);
-        throw new UnauthorizedException('Invalid credentials');
+        throw new UnauthorizedException(
+          'Email address not found. Please check and try again',
+        );
       }
 
       // Verify password matches
       if (!user.password) {
-        throw new UnauthorizedException('Invalid credentials');
+        throw new UnauthorizedException(
+          'Email address not found. Please check and try again',
+        );
       }
       await this.passwordService.verifyPassword(password, user.password);
 

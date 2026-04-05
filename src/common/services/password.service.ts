@@ -37,7 +37,7 @@ export class PasswordService {
       );
 
       if (!isPasswordValid) {
-        throw new UnauthorizedException('Invalid credentials');
+        throw new UnauthorizedException('Password is incorrect');
       }
     } catch (error) {
       if (error instanceof UnauthorizedException) {
